@@ -6,9 +6,19 @@ import json
 from pathlib import Path
 from typing import List
 
-from models.user import User
-from models.project import Project
-from models.task import Task
+try:
+    from models.user import User
+    from models.project import Project
+    from models.task import Task
+except ImportError:
+    from ..models.user import User
+    from ..models.project import Project
+    from ..models.task import Task
+
+if __package__ in {None, ""}:
+    import os
+    import sys
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 
 class DataStore:

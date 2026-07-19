@@ -10,10 +10,21 @@ from pathlib import Path
 from rich.console import Console
 from rich.table import Table
 
-from models.project import Project
-from models.task import Task
-from models.user import User
-from utils.storage import DataStore
+try:
+    from models.project import Project
+    from models.task import Task
+    from models.user import User
+    from utils.storage import DataStore
+except ImportError:
+    from .models.project import Project
+    from .models.task import Task
+    from .models.user import User
+    from .utils.storage import DataStore
+
+if __package__ in {None, ""}:
+    import os
+    import sys
+    sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s:%(name)s:%(message)s")
 logger = logging.getLogger("tracker")

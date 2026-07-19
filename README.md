@@ -17,9 +17,13 @@ A Python-based command-line tool for managing users, projects, tasks, and their 
    ```bash
    pip install -r requirements.txt
    ```
-3. Run the CLI from the project root:
+3. Install the CLI as a package for deployment-style usage:
    ```bash
-   python main.py add-user --name Alex --email alex@example.com
+   pip install .
+   ```
+4. Run the installed CLI:
+   ```bash
+   project-tracker add-user --name Alex --email alex@example.com
    ```
 
 ## Example Commands
