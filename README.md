@@ -7,8 +7,10 @@ A Python-based command-line tool for managing users, projects, tasks, and their 
 - Create and list users
 - Add projects to users and view projects by user
 - Add tasks to projects and mark them complete
-- Persist data locally with JSON files
-- Use object-oriented models with relationships between users, projects, and tasks
+- Update existing project details
+- Persist data locally in JSON files
+- Use object-oriented models with clear relationships between users, projects, and tasks
+- Support a custom storage file path for flexible data location
 
 ## Setup
 
@@ -21,19 +23,30 @@ A Python-based command-line tool for managing users, projects, tasks, and their 
    ```bash
    pip install .
    ```
-4. Run the installed CLI:
+4. Run the CLI:
    ```bash
-   project-tracker add-user --name Alex --email alex@example.com
+   python main.py add-user --name Alex --email alex@example.com
    ```
 
-## Example Commands
+## Available Commands
 
 ```bash
 python main.py add-user --name Alex --email alex@example.com
+python main.py list-users
 python main.py add-project --user Alex --title "CLI Tool" --description "Build a CLI" --due-date 2026-08-01
 python main.py add-task --project "CLI Tool" --title "Implement add-task"
 python main.py list-projects --user Alex
+python main.py list-tasks
 python main.py complete-task --title "Implement add-task"
+python main.py update-project --project "CLI Tool" --description "Build a robust CLI tool"
+```
+
+## Custom Storage File
+
+You can store data in a different JSON file if needed:
+
+```bash
+python main.py --storage /path/to/data.json list-users
 ```
 
 ## Testing
@@ -41,5 +54,12 @@ python main.py complete-task --title "Implement add-task"
 Run the test suite with:
 
 ```bash
-python -m unittest discover -s tests
+python -m pytest -q
 ```
+
+## Project Structure
+
+- src/app.py - CLI entry point and command handling
+- src/models - User, Project, Task, and Person model classes
+- src/utils/storage.py - JSON persistence layer
+- tests - Unit tests for models and storage behavior

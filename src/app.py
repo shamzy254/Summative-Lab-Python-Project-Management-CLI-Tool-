@@ -7,8 +7,12 @@ import logging
 import sys
 from pathlib import Path
 
-from rich.console import Console
-from rich.table import Table
+try:
+    from rich.console import Console
+    from rich.table import Table
+except ImportError:  # pragma: no cover - exercised when rich is unavailable
+    Console = None
+    Table = None
 
 try:
     from models.project import Project
@@ -34,7 +38,7 @@ class ProjectTrackerCLI:
     """Simple command-line interface for managing users, projects, and tasks."""
 
     def __init__(self, storage_path: str | Path | None = None):
-        self.console = Console()
+        self.console = Console() if Console is not None else None
         self.storage = DataStore(storage_path)
         self.users = self.storage.load_users()
         self.projects = self.storage.load_projects()
@@ -78,6 +82,8 @@ class ProjectTrackerCLI:
         """Return a human-readable list of users."""
         if not self.users:
             return "No users found"
+        if self.console is None or Table is None:
+            return "\n".join(["Users", *[f"{user.name} | {user.email}" for user in self.users]])
         table = Table(title="Users")
         table.add_column("Name", style="cyan")
         table.add_column("Email", style="magenta")
@@ -96,6 +102,12 @@ class ProjectTrackerCLI:
             projects = user.projects
         if not projects:
             return "No projects found"
+        if self.console is None or Table is None:
+            title = f"Projects{' for ' + user_name if user_name else ''}"
+            lines = [title]
+            for project in projects:
+                lines.append(f"{project.title} | {project.due_date} | {project.description}")
+            return "\n".join(lines)
         table = Table(title=f"Projects{' for ' + user_name if user_name else ''}")
         table.add_column("Title", style="green")
         table.add_column("Due Date", style="yellow")
@@ -108,6 +120,11 @@ class ProjectTrackerCLI:
         """Return a simple task summary."""
         if not self.tasks:
             return "No tasks found"
+        if self.console is None or Table is None:
+            lines = ["Tasks"]
+            for task in self.tasks:
+                lines.append(f"{task.title} | {task.status} | {task.assigned_to or 'Unassigned'}")
+            return "\n".join(lines)
         table = Table(title="Tasks")
         table.add_column("Title", style="cyan")
         table.add_column("Status", style="magenta")
@@ -149,6 +166,13 @@ class ProjectTrackerCLI:
     def _find_task(self, title: str) -> Task | None:
         return next((task for task in self.tasks if task.title.lower() == title.lower()), None)
 
+    def display(self, value: object) -> None:
+        """Render output using rich when available, otherwise print plain text."""
+        if self.console is not None:
+            self.console.print(value)
+        else:
+            print(value)
+
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Project tracker CLI")
@@ -185,6 +209,8 @@ def build_parser() -> argparse.ArgumentParser:
     update_project.add_argument("--description")
     update_project.add_argument("--due-date")
 
+    parser.add_argument("--storage", default="data/data.json", help="Path to the JSON storage file")
+
     return parser
 
 
@@ -192,20 +218,21 @@ def main() -> int:
     parser = build_parser()
     args = parser.parse_args()
 
-    cli = ProjectTrackerCLI(Path("data/data.json"))
+    storage_path = Path(args.storage)
+    cli = ProjectTrackerCLI(storage_path)
     try:
         if args.command == "add-user":
             print(cli.add_user(args.name, args.email))
         elif args.command == "list-users":
-            cli.console.print(cli.list_users())
+            cli.display(cli.list_users())
         elif args.command == "add-project":
             print(cli.add_project(args.user, args.title, args.description, args.due_date))
         elif args.command == "add-task":
             print(cli.add_task(args.project, args.title, args.assigned_to))
         elif args.command == "list-projects":
-            cli.console.print(cli.list_projects(args.user))
+            cli.display(cli.list_projects(args.user))
         elif args.command == "list-tasks":
-            cli.console.print(cli.list_tasks())
+            cli.display(cli.list_tasks())
         elif args.command == "complete-task":
             print(cli.complete_task(args.title))
         elif args.command == "update-project":

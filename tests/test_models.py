@@ -68,6 +68,14 @@ class ModelTests(unittest.TestCase):
         self.assertEqual(len(reloaded_user.projects), 1)
         self.assertEqual(reloaded_user.projects[0].title, "CLI Tool")
 
+    def test_storage_recovers_from_invalid_root_json(self):
+        self.storage_path.write_text("[]", encoding="utf-8")
+        store = DataStore(self.storage_path)
+
+        self.assertEqual(store.load_users(), [])
+        self.assertEqual(store.load_projects(), [])
+        self.assertEqual(store.load_tasks(), [])
+
 
 if __name__ == "__main__":
     unittest.main()

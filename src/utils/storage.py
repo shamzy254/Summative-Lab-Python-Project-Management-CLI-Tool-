@@ -62,10 +62,30 @@ class DataStore:
         self._write_data(data)
 
     def _read_data(self) -> dict:
+        default_data = {"users": [], "projects": [], "tasks": []}
+
         try:
-            return json.loads(self.path.read_text(encoding="utf-8"))
+            raw_text = self.path.read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return default_data.copy()
+        except OSError:
+            return default_data.copy()
+
+        try:
+            parsed = json.loads(raw_text)
         except json.JSONDecodeError:
-            return {"users": [], "projects": [], "tasks": []}
+            return default_data.copy()
+
+        if not isinstance(parsed, dict):
+            return default_data.copy()
+
+        normalized = default_data.copy()
+        for key in normalized:
+            value = parsed.get(key)
+            if isinstance(value, list):
+                normalized[key] = value
+        return normalized
 
     def _write_data(self, data: dict) -> None:
+        self.path.parent.mkdir(parents=True, exist_ok=True)
         self.path.write_text(json.dumps(data, indent=2), encoding="utf-8")
